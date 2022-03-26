@@ -13,6 +13,7 @@ class App extends React.PureComponent {
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<MapContainer />} />
+          <Route path='*' element={ <Navigate to='/' /> } />
         </Routes>
       </BrowserRouter>
     )
