@@ -22,7 +22,7 @@ class MapGL extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { geojsonData, markerData } = this.props
+    const { geojsonData } = this.props
     const { map } = this.state    
 
     // If map changes in state
@@ -31,18 +31,6 @@ class MapGL extends React.PureComponent {
       // Render Geojson Layer
       this._renderGeojsonOnLoad(geojsonData)
     }
-
-    // // If Geojson Data Changes
-    // if (!_isEqual(prevProps.geojsonData, geojsonData)) {      
-    //   // Render Geojson Layer
-    //   this._renderGeojsonOnLoad(geojsonData, { fitBounds: !prevProps.geojsonData && geojsonData })
-    // }
-
-    // // If Marker Data Changes
-    // if (!_isEqual(prevProps.markerData, markerData)) {
-    //   // Render Markers
-    //   this._renderMarkers(markerData, { fitBounds: !prevProps.markerData?.length && markerData.length })
-    // }
   }
 
   componentWillUnmount() {    
