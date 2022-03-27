@@ -1570,7 +1570,7 @@
         "properties": {
           "name": "Rangpur",
           "area": "2,401 km²",
-          "status": "Not Visited"
+          "status": "Wish to visit"
         },
         "geometry": {
           "type": "Polygon",
@@ -3663,7 +3663,7 @@
         "properties": {
           "name": "Rajshahi",
           "area": "2,407 km²",
-          "status": "Not Visited"
+          "status": "Wish to visit"
         },
         "geometry": {
           "type": "Polygon",

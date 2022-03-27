@@ -6,6 +6,7 @@ import './App.css'
 
 // Import Components
 import MapContainer from './components/MapContainer';
+import DistrictDetails from './components/DistrictDetails';
 
 class App extends React.PureComponent {
   render() {
@@ -14,6 +15,7 @@ class App extends React.PureComponent {
         <Routes>
           <Route path='/' element={<MapContainer />} />
           <Route path='*' element={ <Navigate to='/' /> } />
+          <Route path='/district-details' element={<DistrictDetails />} />
         </Routes>
       </BrowserRouter>
     )

@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Map, NavigationControl, Popup } from 'bkoi-gl'
+import _isEqual from 'fast-deep-equal'
 import _debounce from 'lodash.debounce'
 import { bbox } from '@turf/turf'
 import { MAP } from '../App.config'
@@ -27,9 +28,14 @@ class MapGL extends React.PureComponent {
 
     // If map changes in state
     if(prevState.map !== map) {      
-      
       // Render Geojson Layer
       this._renderGeojsonOnLoad(geojsonData)
+    }
+
+    // If Geojson Data Changes
+    if (!_isEqual(prevProps.geojsonData, geojsonData)) {     
+        // Render Geojson Layer
+        this._renderGeojson(geojsonData)
     }
   }
 
@@ -128,7 +134,7 @@ class MapGL extends React.PureComponent {
   }
 
   // Render Geojson
-  _renderGeojson = (geojsonData, options={ fitBounds: true }) => {    
+  _renderGeojson = (geojsonData, options={ fitBounds: true }) => {   
     const { map, geojsonSourceId, geojsonLayerId } = this.state
 
     // Remove Existing Geojson
@@ -136,6 +142,10 @@ class MapGL extends React.PureComponent {
 
     if(!geojsonData) {
       return
+    }
+
+    if(!map) {
+        return
     }
 
     // Add Geojson Source To Map
@@ -153,7 +163,12 @@ class MapGL extends React.PureComponent {
         'visibility': 'visible',        
       },
       'paint': {
-        'fill-color': '#00ff00',
+        'fill-color': [
+            'match',
+              ['get', 'status'],
+              'Visited', 'yellow',
+              'Wish to visit', 'red', 'green'
+        ],
         'fill-opacity': 0.2
       },
       'filter': [ '==', '$type', 'Polygon' ]
@@ -194,7 +209,7 @@ class MapGL extends React.PureComponent {
             'font-scale': 0.8,
             'text-font': [
             'literal',
-            ['DIN Offc Pro Italic', 'Arial Unicode MS Regular']
+            ['Arial Unicode MS Regular']
             ]
             }
         ],
@@ -205,22 +220,22 @@ class MapGL extends React.PureComponent {
       "paint":{
         "text-translate":[0,-20],
       }
-    });
+    })
 
     // Add Tooltip
     const popup = new Popup({ focusAfterOpen: false })
     map.on('mousemove', geojsonLayerId, e => {
-      e.stopPropagation()
       popup.setLngLat(e.lngLat)
         .setHTML(
-          `<strong style="margin-right: 4px;">District:</strong>
-          ${ e.features[0].properties.name }`
+          `<div>
+              <strong style="margin-right: 4px;">District:</strong> ${ e.features[0].properties.name } <br/>
+              <strong style="margin-right: 4px;">Status:</strong> ${ e.features[0].properties.status } <br/>
+          </div>`
         )
         .addTo(map)
     })
 
     map.on('mouseleave', geojsonLayerId, e => {
-      e.stopPropagation()
       popup.remove()
     })
 
@@ -241,6 +256,10 @@ class MapGL extends React.PureComponent {
 
     if(!geojsonData) {
       return
+    }
+
+    if(!map) {
+        return
     }
 
     map.on('load', () => {
@@ -264,7 +283,7 @@ class MapGL extends React.PureComponent {
               'match',
                 ['get', 'status'],
                 'Visited', 'yellow',
-                'Not Visited', 'red', 'green'
+                'Wish to visit', 'red', 'green'
           ],
           'fill-opacity': 0.2
         },
@@ -288,21 +307,6 @@ class MapGL extends React.PureComponent {
         'filter': [ '==', '$type', 'Polygon' ]
       })
 
-      // Add SND Name Text Layer To Map
-      map.addLayer({
-        'id': geojsonLayerId + '-text',
-        'type': 'symbol',
-        'source': geojsonSourceId,
-        'layout': {
-          'text-field': '{name}',
-          'text-size': 14,          
-        },
-        'paint': {
-          'text-color': '#270082',          
-        },
-        'filter': [ '==', '$type', 'Polygon' ]
-      })
-
       // Add Tooltip
       const popup = new Popup({ focusAfterOpen: false })    
 
@@ -321,6 +325,14 @@ class MapGL extends React.PureComponent {
         popup.remove()
     })
 
+    // Map on click event
+    map.on('click', geojsonLayerId, e => {
+        const { handleMapClick } = this.props
+
+        // Get Properties of clicked feature and pass to Parent Component
+        handleMapClick(e)
+    })
+
       // Fit Map Bounds
       if(options.fitBounds) {
         this._fitBounds(geojsonData, { dataType: 'geojson' })
@@ -333,12 +345,15 @@ class MapGL extends React.PureComponent {
   // Remove Geojson
   _removeGeojson = () => {
     const { map, geojsonSourceId, geojsonLayerId, renderedGeojson } = this.state
-
     if(!renderedGeojson) {
       return
     }
 
     // Remove Geojson Layer
+    if(map.getLayer(geojsonLayerId + '-text')) {
+        map.removeLayer(geojsonLayerId + '-text')
+    }
+
     if(map.getLayer(geojsonLayerId + '-border')) {
       map.removeLayer(geojsonLayerId + '-border')
     }
