@@ -7,11 +7,13 @@ import './App.css'
 // Import Components
 import MapContainer from './components/MapContainer';
 import DistrictDetails from './components/DistrictDetails';
+import Filter from './components/Filter';
 
 class App extends React.PureComponent {
   render() {
     return (
       <BrowserRouter>
+        
         <Routes>
           <Route path='/' element={<MapContainer />} />
           <Route path='*' element={ <Navigate to='/' /> } />

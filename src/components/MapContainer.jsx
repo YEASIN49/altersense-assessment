@@ -5,19 +5,41 @@ import { Navigate } from 'react-router-dom'
 
 // Import Components
 import MapGL from './MapGL'
+import Filter from './Filter'
 
 // Import Actions
 import { setSelectedDistrict } from '../store/dataReducer'
 
 // Import GeoJSON
 import Data from '../data.json'
+import newData from '../ashulia-kaundia.json'
 
 // Parse and stringify data
-const ParsedData = JSON.parse(JSON.stringify(Data))
+// const ParsedData = JSON.parse(JSON.stringify(Data))
+// const ParsedData = JSON.parse(JSON.stringify(newData))
+
+const jsonParsedData = JSON.parse(JSON.stringify(newData))
+
+    // Feting area feature of dhaka of Dhaka
+    const initialDataToLoad = jsonParsedData.features.filter(element => {
+        if(element.properties.district && element.properties.district === 'Dhaka'){
+            return element
+        }
+    })
+
+    // reformatted the geojson data 
+    const parsedData = {
+        type: "FeatureCollection",
+        features: [
+            initialDataToLoad[0]
+        ]
+    }
+
+
 
 class MapContainer extends React.PureComponent {
     state = {
-        dataGeoJson: ParsedData,
+        dataGeoJson: parsedData,
         actions: [
             { name: 'All', value: 'all' },
             { name: 'Visited', value: 'Visited' },
@@ -28,6 +50,16 @@ class MapContainer extends React.PureComponent {
         redirect: false
     }
 
+
+
+    componentDidUpdate(){
+        this.setState({
+            dataGeoJson : this.props.currentFilter
+        })
+        console.log({onMapUpdate : this.props.currentFilter})
+    }
+
+
     // Handle Status Change
     _handleStatusChange = (action) => {
         // Set Selected Action
@@ -36,7 +68,7 @@ class MapContainer extends React.PureComponent {
         // If action value is not all, filter data
         if(action.value !== 'all') {
             // Filter data
-            const selectedData = ParsedData.features.filter(item => item.properties.status === action.value)
+            const selectedData = parsedData.features.filter(item => item.properties.status === action.value)
 
             // Transform selected data to geojson
             const newData = {
@@ -48,7 +80,7 @@ class MapContainer extends React.PureComponent {
             this.setState({ dataGeoJson: newData })
         } else {
             // Update state with all data
-            this.setState({ dataGeoJson: ParsedData })
+            this.setState({ dataGeoJson: parsedData })
         }
     }
 
@@ -68,9 +100,10 @@ class MapContainer extends React.PureComponent {
         const { dataGeoJson, actions, selectedAction, redirect } = this.state
         return (
             <div className='mapContainer'>
+                <Filter />
                 <MapGL geojsonData={ dataGeoJson } handleMapClick={ this._handleMapClick } />
                 <div className='actionContainer'>
-                    <div className='actionBG'>
+                    {/* <div className='actionBG'>
                         {
                             actions.map(action => (
                                 <button
@@ -90,7 +123,7 @@ class MapContainer extends React.PureComponent {
                                 </button>
                             ))
                         }
-                    </div>                  
+                    </div>                   */}
                 </div>
                 {
                     redirect && <Navigate to='/district-details' />
@@ -109,6 +142,11 @@ MapContainer.defaultProps = {
     dispatch: () => null
 }
 
+const mapStateToProps = (state) => ({
+    currentFilter: state?.data?.currentFilter ?? [],
+})
+
+
 const mapDispatchToProps = dispatch => ({ dispatch })
 
-export default connect(null, mapDispatchToProps)(MapContainer)
+export default connect(mapStateToProps, mapDispatchToProps)(MapContainer)
